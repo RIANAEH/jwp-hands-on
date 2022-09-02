@@ -1,2 +1,8 @@
 handlebars:
   suffix: .html
+
+# HTTP Compression 설정
+server:
+  compression:
+    enabled: true
+    min-response-size: 10
