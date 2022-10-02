@@ -1,13 +1,12 @@
 package jdbc.stage1;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import java.sql.SQLException;
 import org.h2.jdbcx.JdbcConnectionPool;
 import org.junit.jupiter.api.Test;
-
-import java.sql.SQLException;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class Stage1Test {
 
@@ -28,7 +27,7 @@ class Stage1Test {
      */
     @Test
     void testJdbcConnectionPool() throws SQLException {
-        final JdbcConnectionPool jdbcConnectionPool = null;
+        final JdbcConnectionPool jdbcConnectionPool = JdbcConnectionPool.create(H2_URL, USER, PASSWORD);
 
         assertThat(jdbcConnectionPool.getActiveConnections()).isZero();
         try (final var connection = jdbcConnectionPool.getConnection()) {
@@ -60,9 +59,15 @@ class Stage1Test {
      */
     @Test
     void testHikariCP() {
-        final var hikariConfig = new HikariConfig();
+        // 1. HikariConfig를 이용해 설정할 수 있다.
+        // final var dataSource = setConfigWithHikariConfig();
 
-        final var dataSource = new HikariDataSource(hikariConfig);
+        // 2. HikariDataSource에 직접 설정할 수 있다.
+        final var dataSource = setConfigWithHikariDataSource();
+
+        // 3. application.yml로 설정할 수 있다. (패스 설정을 잘 모르겠음..)
+        // final var dataSource = setConfigWithApplicationYml();
+
         final var properties = dataSource.getDataSourceProperties();
 
         assertThat(dataSource.getMaximumPoolSize()).isEqualTo(5);
@@ -71,5 +76,35 @@ class Stage1Test {
         assertThat(properties.getProperty("prepStmtCacheSqlLimit")).isEqualTo("2048");
 
         dataSource.close();
+    }
+
+    private HikariDataSource setConfigWithHikariConfig() {
+        final var hikariConfig = new HikariConfig();
+        hikariConfig.setJdbcUrl(H2_URL);
+        hikariConfig.setUsername(USER);
+        hikariConfig.setPassword(PASSWORD);
+        hikariConfig.setMaximumPoolSize(5);
+        hikariConfig.addDataSourceProperty("cachePrepStmts", "true");
+        hikariConfig.addDataSourceProperty("prepStmtCacheSize", "250");
+        hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+
+        return new HikariDataSource(hikariConfig);
+    }
+
+    private HikariDataSource setConfigWithHikariDataSource() {
+        final var dataSource = new HikariDataSource();
+        dataSource.setJdbcUrl(H2_URL);
+        dataSource.setUsername(USER);
+        dataSource.setPassword(PASSWORD);
+        dataSource.setMaximumPoolSize(5);
+        dataSource.addDataSourceProperty("cachePrepStmts", "true");
+        dataSource.addDataSourceProperty("prepStmtCacheSize", "250");
+        dataSource.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+        return dataSource;
+    }
+
+    private HikariDataSource setConfigWithApplicationYml() {
+        final var hikariConfig = new HikariConfig("resources/application.yml");
+        return new HikariDataSource(hikariConfig);
     }
 }
