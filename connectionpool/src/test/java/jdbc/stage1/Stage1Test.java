@@ -65,9 +65,6 @@ class Stage1Test {
         // 2. HikariDataSource에 직접 설정할 수 있다.
         final var dataSource = setConfigWithHikariDataSource();
 
-        // 3. application.yml로 설정할 수 있다. (패스 설정을 잘 모르겠음..)
-        // final var dataSource = setConfigWithApplicationYml();
-
         final var properties = dataSource.getDataSourceProperties();
 
         assertThat(dataSource.getMaximumPoolSize()).isEqualTo(5);
@@ -101,10 +98,5 @@ class Stage1Test {
         dataSource.addDataSourceProperty("prepStmtCacheSize", "250");
         dataSource.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
         return dataSource;
-    }
-
-    private HikariDataSource setConfigWithApplicationYml() {
-        final var hikariConfig = new HikariConfig("resources/application.yml");
-        return new HikariDataSource(hikariConfig);
     }
 }
